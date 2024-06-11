@@ -1,14 +1,13 @@
-package com.springtutorials.spring_configuration;
+package com.springtutorials.spring_startup;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SpringConfigurationApplication {
+public class SpringStartupApplication {
 
 	public static void main(String[] args) {
-
-		SpringApplication.run(SpringConfigurationApplication.class, args);
+		SpringApplication.run(SpringStartupApplication.class, args);
 	}
 
 }
