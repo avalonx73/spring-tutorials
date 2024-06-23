@@ -1,0 +1,34 @@
+spring:
+  kafka:
+    #bootstrap-servers: kafka1:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+  data:
+    mongodb:
+      uri: mongodb://${MONGODB_USER}:${MONGODB_PASS}@${MONGODB_CLUSTER}
+      database: ${MONGODB_PAYMENT_DB}
+
+payment:
+  hazelcast:
+    enabled: true
+    clusterName: hazelcastPortalCluster
+    multicast:
+      enabled: true
+    kubernetes:
+      enabled: false
+      namespace: default
+      service-dns: service-hz
+    tcp-ip:
+      enabled: false
+      nodes:
+  nodes:
+  kafka:
+    batch:
+      dummy-step-1:
+        topic-replicas: 1
+        topic-partitions: 1
+  executors:
+    enabled: true
+    nThreads: 5
+    scheduler:
+      pool-size: 8
+      thread-naming-prefix: "update-tps-info"

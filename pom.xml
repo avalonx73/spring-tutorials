@@ -22,6 +22,7 @@
 		<module>spring-event</module>
 		<module>spring-configuration</module>
 		<module>spring-startup</module>
+		<module>timeline</module>
 	</modules>
 
 	<packaging>pom</packaging>
