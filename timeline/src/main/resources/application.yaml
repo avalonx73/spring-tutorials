@@ -2,10 +2,28 @@ spring:
   kafka:
     #bootstrap-servers: kafka1:9092
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      max-poll-records: 100
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: org.springframework.batch.integration.partition
+        session.timeout.ms: 60000
+        heartbeat.interval.ms: 20000
+    admin:
+      fail-fast: true
+    listener:
+      idle-between-polls: 1000
+
   data:
     mongodb:
       uri: mongodb://${MONGODB_USER}:${MONGODB_PASS}@${MONGODB_CLUSTER}
       database: ${MONGODB_PAYMENT_DB}
+  batch:
+    job:
+      enabled: false
 
 payment:
   hazelcast:
