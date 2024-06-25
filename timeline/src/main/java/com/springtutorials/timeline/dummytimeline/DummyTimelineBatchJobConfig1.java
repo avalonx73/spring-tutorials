@@ -77,7 +77,7 @@ public class DummyTimelineBatchJobConfig1 {
     }
 
     @Bean(name = DUMMY_TIMELINE_WORKER_STEP)
-    public Step paidDummyTimelineWorker(DummyTimelineTasklet1 dummyTimelineTasklet) {
+    public Step dummyTimelineWorker(DummyTimelineTasklet1 dummyTimelineTasklet) {
         return this.workerStepBuilderFactory.get(DUMMY_TIMELINE_WORKER_STEP)
                 .inputChannel(inboundDummyTimelinePartitionChannel())
                 .tasklet(dummyTimelineTasklet)
@@ -91,7 +91,7 @@ public class DummyTimelineBatchJobConfig1 {
     }
 
     @Bean
-    public IntegrationFlow paidDummyTimelineManagerPartitionFlow(KafkaTemplate<Object, Object> kafkaTemplate) {
+    public IntegrationFlow dummyTimelineManagerPartitionFlow(KafkaTemplate<Object, Object> kafkaTemplate) {
         String topic = dummyProperties.getKafka().getBatch().getDummyStep1().getTopic();
         return IntegrationFlows.from(dummyTimelinePartitionRequestChannel())
                 .handle(Kafka.outboundChannelAdapter(kafkaTemplate).topic(topic))

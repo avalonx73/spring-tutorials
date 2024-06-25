@@ -17,8 +17,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.springtutorials.timeline.common.model.process.ProcessTimelineStepDefinition.DUMMY_TIMELINE_STEP1;
-
 @Slf4j
 public class DummyTimelinePartitioner1 implements Partitioner {
     static final String DUMMY_TIMELINE_IDS_PARAM = "dummyTimelineIds";
@@ -37,7 +35,7 @@ public class DummyTimelinePartitioner1 implements Partitioner {
 
     @Override
     public Map<String, ExecutionContext> partition(int chunkSize) {
-        HazelcastProcessStepInfo processStepInfo = hazelcastHelper.getProcessStepInfoMap().get(DUMMY_TIMELINE_STEP1.name());
+        HazelcastProcessStepInfo processStepInfo = hazelcastHelper.getProcessStepInfoMap().get(stepDefinition.name());
         if (processStepInfo != null) {
             var reportDate = LocalDate.from(DateTimeFormatter.ISO_DATE.parse(processStepInfo.getReportDate()));
         }
