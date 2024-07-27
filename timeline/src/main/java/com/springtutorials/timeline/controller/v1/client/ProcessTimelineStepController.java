@@ -29,7 +29,6 @@ public class ProcessTimelineStepController {
     @PatchMapping(PAYMENT_TIMELINE_STEP_PATH + "/start")
     public ResponseEntity<ResponseWrapper<String>> startTimelineStep(
            @RequestBody ProcessTimelineStepMetadataDto stepMetadataDto) {
-//        timelineStepValidator.validate(stepMetadataDto);
         processTimelineStepService.startStep(stepMetadataDto);
         return ResponseEntity.ok(wrapPayload("STARTED", requestId));
     }

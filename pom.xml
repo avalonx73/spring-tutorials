@@ -23,16 +23,35 @@
 		<module>spring-configuration</module>
 		<module>spring-startup</module>
 		<module>timeline</module>
+		<module>spring-mvc</module>
+		<module>spring-multithread</module>
 	</modules>
 
 	<packaging>pom</packaging>
 
 	<dependencies>
+		<!-- базовый стартер, который включает в себя минимальный набор зависимостей, необходимых для запуска Spring Boot приложения.
+		Он предназначен для предоставления основного набора библиотек, которые понадобятся в любом Spring Boot проекте.
+		включает:
+			- Spring Core
+			- Spring Boot Auto-Configuration
+			- Logging -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
 
+		<!-- Стартер, который предоставляет все необходимые зависимости для тестирования Spring Boot приложений
+			Включает:
+				- JUnit 5 (Jupiter)
+				- Spring Test -  Обеспечивает поддержку интеграционного тестирования Spring, включая поддержку загрузки контекста, подмены зависимостей и т.д.
+				- Spring Boot Test - Расширяет возможности spring-test для работы с Spring Boot, включая аннотации, такие как @SpringBootTest, @MockBean и другие
+				- AssertJ - assertj-core: Библиотека для написания выразительных и читаемых утверждений (assertions) в тестах
+				- Hamcrest - Библиотека для создания матчер-объектов, которые позволяют писать более гибкие и выразительные утверждения
+				- Mockito
+				- JSONassert - Инструмент для проверки JSON-структур в тестах
+				- JsonPath - Инструмент для проверки и извлечения данных из JSON-документов
+		-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

@@ -68,6 +68,11 @@ public class DummyTimelineBatchJobConfig1 {
                 .build();
     }
 
+    @Bean
+    public DummyTimelineStepExecutionListener dummyTimelineStepExecutionListener(DummyTimelinePartitioner1 dummyTimelinePartitioner) {
+        return new DummyTimelineStepExecutionListener(dummyTimelinePartitioner);
+    }
+
     @Bean(name = DUMMY_TIMELINE_PARTITIONER_BEAN)
     public DummyTimelinePartitioner1 dummyTimelinePartitioner(@Qualifier("dummyTimelineHazelcastHelper1")
                                                               AbstractHazelcastProcessingHelper<String> hazelcastHelper) {

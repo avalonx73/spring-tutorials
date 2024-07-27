@@ -58,15 +58,16 @@ public abstract class AbstractProcessTimelineStepExecutorService<T extends Seria
     }
 
     protected HazelcastProcessStepInfo prepareHazelcastStepStartInfo(ProcessTimeline timeline) {
-        HazelcastProcessStepInfo hazelcastStepInfo =
-                getOrCreateStepInfo(timeline);
+        HazelcastProcessStepInfo hazelcastStepInfo = getOrCreateStepInfo(timeline);
         hazelcastStepInfo.setTimelineId(timeline.getId());
         hazelcastStepInfo.setProcessName(getStepDefinition().getType().name());
         hazelcastStepInfo.setProcessStepName(getStepDefinition().name());
         hazelcastStepInfo.setPercentage(0);
+
         if (timeline.getReportDate() != null) {
             hazelcastStepInfo.setReportDate(timeline.getReportDate().format(ISO_DATE));
         }
+
         hazelcastStepInfo.setStartedAt(ISO_DATE_TIME.format(LocalDateTime.now()));
         hazelcastStepInfo.setProcessStepStatus(IN_PROCESS);
         getHazelcastHelper().getProcessStepInfoMap().put(getStepDefinition().name(), hazelcastStepInfo);

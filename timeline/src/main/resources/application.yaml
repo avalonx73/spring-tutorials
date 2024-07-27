@@ -23,6 +23,7 @@ spring:
       database: ${MONGODB_PAYMENT_DB}
   batch:
     job:
+      # предотвращает автоматический запуск всех задач (Jobs) при старте приложения Spring Boot (BatchAutoConfiguration)
       enabled: false
 
 payment:

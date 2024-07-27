@@ -2,21 +2,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.5.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>com.springtutorials</groupId>
 	<artifactId>timeline</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>timeline</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
+
 	<licenses>
 		<license/>
 	</licenses>
+
 	<developers>
 		<developer/>
 	</developers>
@@ -44,6 +48,14 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Включает зависимости для создания веб-приложений с использованием Spring MVC.
+		     Он включает в себя Tomcat, Jackson, Spring MVC и другие необходимые библиотеки.-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
@@ -54,17 +66,21 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 
+		<!-- Является ядром Spring Integration, который предоставляет основу для построения интеграционных решений на платформе Spring.
+		Spring Integration помогает создавать корпоративные интеграционные паттерны (Enterprise Integration Patterns, EIP) с использованием Spring Framework.
+
+		Spring Integration предоставляет следующие основные компоненты и функциональности:
+		- Сообщения (Messages): Абстракция для передачи данных в виде сообщений с заголовками и полезной нагрузкой (payload).
+		- Каналы (Channels): Механизмы для маршрутизации сообщений между компонентами. Основные типы каналов включают:
+							DirectChannel, QueueChannel, PublishSubscribeChannel и другие.
+		- Сообщения-передатчики (Message Endpoints):  Компоненты, которые производят или потребляют сообщения. Примеры включают:
+													  Service Activator, Transformer, Filter, Router, Splitter, Aggregator
+		- Адаптеры (Adapters): Компоненты, которые позволяют взаимодействовать с внешними системами,
+							   такими как файлы, базы данных, сообщения, веб-службы и т.д.
+		- Потоки (Flows): Определение и управление последовательностью обработки сообщений.
+		- Поддержка паттернов EIP: Поддержка различных интеграционных паттернов, таких как Content-Based Router, Message Filter, Message Translator, и другие.
+		-->
 		<dependency>
 			<groupId>org.springframework.integration</groupId>
 			<artifactId>spring-integration-core</artifactId>
@@ -84,15 +100,14 @@
 
 		<dependency>
 			<groupId>org.springframework.batch</groupId>
-			<artifactId>spring-batch-integration</artifactId>
+			<artifactId>spring-batch-core</artifactId>
 			<version>4.3.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.integration</groupId>
-			<artifactId>spring-integration-kafka</artifactId>
-			<version>5.5.1</version>
+			<groupId>org.springframework.batch</groupId>
+			<artifactId>spring-batch-integration</artifactId>
+			<version>4.3.3</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.batch</groupId>
 			<artifactId>spring-batch-test</artifactId>
@@ -101,10 +116,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.batch</groupId>
-			<artifactId>spring-batch-core</artifactId>
-			<version>4.3.3</version>
+			<groupId>org.springframework.integration</groupId>
+			<artifactId>spring-integration-kafka</artifactId>
+			<version>5.5.1</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
@@ -115,6 +131,12 @@
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
 			<version>1.4.1.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 	</dependencies>

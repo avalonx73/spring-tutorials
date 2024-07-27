@@ -3,7 +3,10 @@ package com.springtutorials.timeline.dummytimeline;
 import com.springtutorials.timeline.common.model.process.ProcessTimelineStepDefinition;
 import com.springtutorials.timeline.common.service.hazelcast.AbstractHazelcastProcessingHelper;
 import com.springtutorials.timeline.common.service.hazelcast.HazelcastProcessStepInfo;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 
@@ -18,11 +21,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
+@Setter
+@Getter
 public class DummyTimelinePartitioner1 implements Partitioner {
     static final String DUMMY_TIMELINE_IDS_PARAM = "dummyTimelineIds";
     private final AbstractHazelcastProcessingHelper<String> hazelcastHelper;
     private final ProcessTimelineStepDefinition stepDefinition;
     private final String partitionPrefix;
+
+    private StepExecution stepExecution;
 
     public DummyTimelinePartitioner1(
             AbstractHazelcastProcessingHelper<String> hazelcastHelper,
@@ -44,8 +51,9 @@ public class DummyTimelinePartitioner1 implements Partitioner {
                 .mapToObj(String::valueOf)
                 .collect(Collectors.toList());
 
-        var executionContexts = partitionDummyIds(listIds, chunkSize)
-                .stream()
+        Collection<List<String>> partitionDummyIds = partitionDummyIds(listIds, chunkSize);
+
+        var executionContexts = partitionDummyIds.stream()
                 .map(DummyTimelinePartitioner1::createExecutionContext)
                 .collect(Collectors.toList());
 
@@ -56,8 +64,8 @@ public class DummyTimelinePartitioner1 implements Partitioner {
         }
 
         hazelcastHelper.clearMapAndPutRecords(listIds);
-        // processStepInfo.setRecordsForProceed(listIds.size());
-        //  hazelcastHelper.getProcessStepInfoMap().put(stepDefinition.name(), processStepInfo);
+        processStepInfo.setRecordsForProceed(listIds.size());
+        hazelcastHelper.getProcessStepInfoMap().put(stepDefinition.name(), processStepInfo);
 
         for (String listId : listIds) {
             Optional<String> recordForProcess = hazelcastHelper.getRecordForProcess(listId);
