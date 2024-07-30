@@ -25,6 +25,7 @@
 		<module>timeline</module>
 		<module>spring-mvc</module>
 		<module>spring-multithread</module>
+		<module>spring-kafka</module>
 	</modules>
 
 	<packaging>pom</packaging>
