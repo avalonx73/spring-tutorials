@@ -1,0 +1,32 @@
+@startuml
+skinparam packageStyle rectangle
+participant Consumer
+autonumber
+box Kafka #LightYellow
+participant Bootstrap_servers
+participant random_Node
+participant group_Coordinator
+participant Broker_with_topic_Partition
+-> Consumer : subscribe([topic])
+activate Consumer
+Consumer -> Consumer : determine group.id
+Consumer -> Bootstrap_servers: get cluster metadata
+activate Bootstrap_servers
+Bootstrap_servers --> Consumer: cluster metadata
+Consumer -> random_Node : get group_Coordinator
+activate random_Node
+random_Node --> Consumer : group_Coordinator
+Consumer -> group_Coordinator : connect to group_Coordinator
+activate group_Coordinator
+Consumer -> Consumer : start hearbeat
+Consumer -> group_Coordinator : get partition
+group_Coordinator -> group_Coordinator: assign partition
+group_Coordinator --> Consumer: partition
+loop poll()
+Consumer -> group_Coordinator : send hearbeat
+Consumer -> Consumer : define offset
+Consumer -> Broker_with_topic_Partition: fetch message
+Broker_with_topic_Partition --> Consumer : message
+end
+end box
+@enduml

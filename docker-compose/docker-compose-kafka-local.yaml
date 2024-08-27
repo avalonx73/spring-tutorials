@@ -1,0 +1,22 @@
+services:
+
+  # Kafka broker and controller
+  kafka:
+    image: 'nexus.datas-tech.com:445/datas-kraft-kafka:2.8.0'
+    hostname: kafka1
+    container_name: 'kafka1'
+    restart: 'on-failure'
+    environment:
+      LISTENER_PORT: 9092
+    ports:
+      - "9092:9092"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: 'kafka-ui'
+    restart: 'on-failure'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092
+    ports:
+      - "8800:8080"

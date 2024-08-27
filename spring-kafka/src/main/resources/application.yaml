@@ -1,0 +1,13 @@
+spring:
+  kafka:
+    consumer:
+      properties:
+        allow.auto.create.topics: true
+        auto.create.topics.enable: true
+    producer:
+      properties:
+        allow.auto.create.topics: true
+        auto.create.topics.enable: true
+
+
+

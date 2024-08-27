@@ -1,0 +1,40 @@
+@startuml
+skinparam packageStyle rectangle
+participant Producer
+participant Producer_Network_Thread
+autonumber
+box Kafka #LightYellow
+participant Bootstrap_servers
+participant Broker_Leader
+participant Broker_Follower_1
+participant Broker_Follower_2
+participant Broker_Follower_3
+-> Producer : send(topic, message)
+activate Producer
+Producer -> Producer : determine partition
+Producer -> Producer: add message to local queue
+Producer -> Producer: check batch.size / linger.ms
+Producer -> Producer_Network_Thread : transform message to query
+activate Producer_Network_Thread
+Producer_Network_Thread -> Bootstrap_servers: get cluster metadata
+activate Bootstrap_servers
+Bootstrap_servers -> Bootstrap_servers : find leader
+Bootstrap_servers --> Producer_Network_Thread : leader
+Producer_Network_Thread  --> Producer : cluster metadata
+Producer -> Broker_Leader : publish message
+activate Broker_Leader
+alt acks = all
+Broker_Leader -> Broker_Follower_1 : fetch(message)
+activate Broker_Follower_1
+Broker_Follower_1 --> Broker_Leader : ack
+Broker_Leader -> Broker_Follower_2 : fetch(message)
+activate Broker_Follower_2
+Broker_Follower_2 --> Broker_Leader : ack
+Broker_Leader -> Broker_Follower_3 : fetch(message)
+activate Broker_Follower_3
+Broker_Follower_3 --> Broker_Leader : ack
+ Broker_Leader --> Producer : acks
+end
+ <- Producer_Network_Thread : callback()
+end box
+@enduml
