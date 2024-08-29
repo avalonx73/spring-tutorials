@@ -1,4 +1,4 @@
-package com.springtutorials.spring_kafka.kafka_clients;
+package com.springtutorials.spring_client_kafka.kafka_clients;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

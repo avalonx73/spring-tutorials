@@ -1,5 +1,7 @@
-package com.springtutorials.spring_kafka.kafka_clients;
+package com.springtutorials.spring_client_kafka;
 
+import com.springtutorials.spring_client_kafka.kafka_clients.TestConsumer;
+import com.springtutorials.spring_client_kafka.kafka_clients.TestProducer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -12,20 +14,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.Collections;
 import java.util.Properties;
 
-import static com.springtutorials.spring_kafka.utils.Utils.sleepMiliseconds;
-import static com.springtutorials.spring_kafka.utils.Utils.sleepMinutes;
+import static com.springtutorials.spring_client_kafka.utils.Utils.sleepMiliseconds;
+import static com.springtutorials.spring_client_kafka.utils.Utils.sleepMinutes;
 
 
 @Slf4j
 @SpringBootApplication
-public class SpringKafkaClientsApplication {
+public class SpringClientKafkaApplication {
 
     private final static String TOPIC = "spring-kafka-demo";
 
     @SneakyThrows
     public static void main(String[] args) {
 
-        SpringApplication.run(SpringKafkaClientsApplication.class, args);
+        SpringApplication.run(SpringClientKafkaApplication.class, args);
 
         createTopic(TOPIC, 3, (short) 1);
 

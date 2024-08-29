@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: spring-configuration
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: group-id
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        allow.auto.create.topics: true
+        auto.create.topics.enable: true
+    producer:
+      batch-size: 500
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        linger.ms: 1000
+        allow.auto.create.topics: true
+        auto.create.topics.enable: true
+
