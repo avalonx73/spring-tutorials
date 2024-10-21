@@ -1,0 +1,9 @@
+Edit online
+@startuml
+[*] -> ProcessTimelineStepController
+ProcessTimelineStepController --> ProcessTimelineStepServiceImpl
+ProcessTimelineStepController:startTimelineStep {\n processTimelineStepService.startStep()\n}
+ProcessTimelineStepServiceImpl : startStep() {\n  executeStep() {\n     stepExecutorService.startStep\n }\n}
+ProcessTimelineStepServiceImpl --> AbstractBatchJobTimelineStepExecutorService
+AbstractBatchJobTimelineStepExecutorService : startStep {\n     batchJobFacade.startNextInstance\n     batchJobFacade.run\n}
+@enduml

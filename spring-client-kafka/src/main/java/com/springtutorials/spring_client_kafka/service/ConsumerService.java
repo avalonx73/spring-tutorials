@@ -1,32 +1,24 @@
-package com.springtutorials.spring_client_kafka.kafka_clients;
+package com.springtutorials.spring_client_kafka.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
-import java.io.Closeable;
 import java.time.Duration;
-import java.util.List;
-import java.util.Properties;
 import java.util.function.Consumer;
 
 @Slf4j
 @Setter
-public class TestConsumer implements Closeable {
+@Service
+@RequiredArgsConstructor
+public class ConsumerService {
     private volatile boolean isRunning = true;
-    private final String topic;
-
-    private KafkaConsumer<String, String> consumer;
-
-    public TestConsumer(String topic) {
-        this.topic = topic;
-        consumer = getConsumer(topic);
-    }
+    private final KafkaConsumer<String, String> consumer;
 
     public void consume(Consumer<ConsumerRecord<String, String>> recordConsumer) {
         new Thread(() -> {
@@ -50,23 +42,5 @@ public class TestConsumer implements Closeable {
             }
         }).start();
         return;
-    }
-
-    private KafkaConsumer<String, String> getConsumer(String topic) {
-        var props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "groupId");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(List.of(topic));
-        return consumer;
-    }
-
-    @Override
-    public void close() {
-        isRunning = false;
-        consumer.close();
     }
 }

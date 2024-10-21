@@ -26,6 +26,7 @@
 		<module>spring-mvc</module>
 		<module>spring-multithread</module>
 		<module>spring-client-kafka</module>
+		<module>spring-async</module>
 	</modules>
 
 	<packaging>pom</packaging>

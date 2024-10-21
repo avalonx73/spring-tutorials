@@ -1,7 +1,7 @@
 package com.springtutorials.spring_client_kafka;
 
-import com.springtutorials.spring_client_kafka.kafka_clients.TestConsumer;
-import com.springtutorials.spring_client_kafka.kafka_clients.TestProducer;
+import com.springtutorials.spring_client_kafka.service.ConsumerService;
+import com.springtutorials.spring_client_kafka.service.ProducerService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -10,6 +10,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 
 import java.util.Collections;
 import java.util.Properties;
@@ -27,29 +28,27 @@ public class SpringClientKafkaApplication {
     @SneakyThrows
     public static void main(String[] args) {
 
-        SpringApplication.run(SpringClientKafkaApplication.class, args);
+        ApplicationContext context = SpringApplication.run(SpringClientKafkaApplication.class, args);
 
         createTopic(TOPIC, 3, (short) 1);
 
-        TestProducer testProducer = new TestProducer(TOPIC);
+        ProducerService producerService = context.getBean(ProducerService.class);
 
         new Thread(() -> {
             for (int i = 1; i <= 200; i++) {
-                testProducer.send("key" + i, "message" + i, true);
+                producerService.send("key" + i, "message" + i, true);
                 sleepMiliseconds(100);
             }
         }).start();
 
-        TestConsumer testConsumer = new TestConsumer(TOPIC);
+        ConsumerService consumerService = context.getBean(ConsumerService.class);
 
-        testConsumer.consume(r -> System.out.println(r.key() + " value: " + r.value()));
+        consumerService.consume(r -> System.out.println(r.key() + " value: " + r.value()));
 
         log.info("Wait...");
         sleepMinutes(5);
-        testConsumer.setRunning(false);
+        consumerService.setRunning(false);
         sleepMinutes(1);
-        testProducer.close();
-        testConsumer.close();
     }
 
     private static void createTopic(String topic, int numPartitions, short replicationFactor)  {

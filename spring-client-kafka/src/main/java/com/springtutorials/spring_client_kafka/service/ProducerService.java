@@ -1,27 +1,21 @@
-package com.springtutorials.spring_client_kafka.kafka_clients;
+package com.springtutorials.spring_client_kafka.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.stereotype.Service;
 
-import java.io.Closeable;
-import java.util.Properties;
 import java.util.concurrent.Future;
 
 @Slf4j
-public class TestProducer implements Closeable {
-    private final String topic;
-
-    private KafkaProducer<String, String> producer;
-
-    public TestProducer(String topic) {
-        this.topic = topic;
-        producer = getProducer();
-    }
+@Service
+@RequiredArgsConstructor
+public class ProducerService {
+    private final String topic = "spring-kafka-demo";
+    private final KafkaProducer<String, String> producer;
 
     @SneakyThrows
     public void send(String key, String value, boolean async) {
@@ -60,22 +54,5 @@ public class TestProducer implements Closeable {
              */
             Object o = producer.send(new ProducerRecord(topic, key, value)).get();
         }
-    }
-
-    private KafkaProducer<String, String> getProducer() {
-        var props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ProducerConfig.CLIENT_ID_CONFIG, "clientId");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 5000);  // Задержка в миллисекундах
-        props.put(ProducerConfig.BATCH_SIZE_CONFIG, 320);  // Размер пакета в байтах (например, 32 KB)
-
-        return new KafkaProducer<>(props);
-    }
-
-    @Override
-    public void close() {
-        producer.close();
     }
 }

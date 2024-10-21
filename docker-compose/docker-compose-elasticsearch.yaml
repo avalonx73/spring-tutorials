@@ -1,0 +1,67 @@
+services:
+  elasticsearch:
+    # Образ, который будет использоваться для запуска Elasticsearch версии 8.9.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    # Имя контейнера, чтобы к нему можно было обращаться по этому имени
+    container_name: elasticsearch
+    environment:
+      # Название узла Elasticsearch (может быть использовано в кластере)
+      - node.name=elasticsearch
+      # Указываем, что Elasticsearch будет работать в режиме одного узла (single-node),
+      # то есть кластеризация не требуется
+      - discovery.type=single-node
+      # Включаем блокировку памяти, чтобы предотвратить сброс Elasticsearch на диск
+      - bootstrap.memory_lock=true
+      # Задаем параметры запуска JVM, устанавливая минимальный и максимальный объем памяти в 512 МБ
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      # Устанавливаем ограничение на блокировку памяти, чтобы JVM не была ограничена ОС
+      memlock:
+        # Мягкое ограничение (soft limit) - без лимита
+        soft: -1
+        # Жесткое ограничение (hard limit) - без лимита
+        hard: -1
+    # Подключаем volume (том) для хранения данных Elasticsearch, чтобы они сохранялись даже после перезапуска контейнера
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    # Пробрасываем порты, чтобы можно было подключаться к Elasticsearch с хоста
+    ports:
+      # Порт для HTTP API Elasticsearch
+      - "9200:9200"
+      # Порт для межузловой связи (используется, если будет несколько узлов)
+      - "9300:9300"
+    # Подключаем контейнер к сети с именем elastic, чтобы он мог взаимодействовать с другими контейнерами
+    networks:
+      - elastic
+
+  kibana:
+    # Образ, который будет использоваться для запуска Kibana версии 8.9.0
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    # Имя контейнера, чтобы можно было обращаться к нему по этому имени
+    container_name: kibana
+    environment:
+      # Указываем хост Elasticsearch, к которому будет подключаться Kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    # Пробрасываем порт, чтобы можно было подключаться к Kibana с хоста
+    ports:
+      # Порт для веб-интерфейса Kibana
+      - "5601:5601"
+    # Подключаем контейнер к сети "elastic", чтобы он мог взаимодействовать с Elasticsearch
+    networks:
+      - elastic
+    # Указываем, что Kibana должна запускаться только после того, как запустится контейнер с Elasticsearch
+    depends_on:
+      - elasticsearch
+
+volumes:
+  # Определяем volume для данных Elasticsearch
+  es_data:
+    driver: local
+
+networks:
+  # Создаем сеть "elastic" для взаимодействия между контейнерами Elasticsearch и Kibana
+  elastic:
+    driver: bridge
+
+# Elasticsearch will be available at: http://localhost:9200
+# Kibana will be available at: http://localhost:5601
