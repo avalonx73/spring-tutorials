@@ -17,12 +17,12 @@ public class StopWatchTest {
 
         stopWatch1.start("Main");
         sleepSeconds(1);
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 5; i++) {
             stopWatch2.start("Nested-1");
             sleepSeconds(1);
             stopWatch2.stop();
             stopWatch2.start("Nested-2");
-            sleepSeconds(1);
+            sleepSeconds(2);
             stopWatch2.stop();
         }
         sleepSeconds(1);
@@ -30,9 +30,9 @@ public class StopWatchTest {
         log.info("stopWatch1 = {}", stopWatch1.shortSummary());
 
         long taskInfo1 = getTaskInfo(stopWatch2, "Nested-1");
-        long taskInfo2 = getTaskInfo(stopWatch2, "Nested-1");
+        long taskInfo2 = getTaskInfo(stopWatch2, "Nested-2");
 
-        log.info("{} - {}", stopWatch2.getLastTaskInfo().getTimeMillis(), stopWatch2.getTotalTimeMillis());
+        log.info("{} = {} + {}", stopWatch1.getTotalTimeMillis(), taskInfo1, taskInfo2);
     }
 
     private long getTaskInfo(StopWatch stopWatch, String taskName) {
@@ -40,7 +40,7 @@ public class StopWatchTest {
         List<StopWatch.TaskInfo> taskInfo1 = List.of(taskInfo);
         long duration = taskInfo1.stream()
                 .filter(t -> taskName.equals(t.getTaskName()))
-                .mapToLong(StopWatch.TaskInfo::getTimeMillis).sum();
-        return duration;
+                .mapToLong(StopWatch.TaskInfo::getTimeNanos).sum();
+        return duration/1000000;
     }
 }

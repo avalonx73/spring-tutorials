@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin        # Имя пользователя для PostgreSQL
+      POSTGRES_PASSWORD: password  # Пароль для PostgreSQL
+      POSTGRES_DB: ledger      # Название базы данных
+    volumes:
+      - /c/MyInfo/data:/var/lib/postgresql/data  # Абсолютный путь к директории в Windows
+    ports:
+      - "5432:5432"  # Подключение к PostgreSQL на порту 5432
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com   # Email для входа в pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin          # Пароль для входа в pgAdmin
+    ports:
+      - "5050:80"  # Подключение к pgAdmin на порту 5050
+    depends_on:
+      - postgres  # Указание, что pgAdmin запустится после PostgreSQL
+
+volumes:
+  postgres_data:

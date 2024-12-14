@@ -317,6 +317,36 @@ auto.offset.reset = earliest | latest | none
 - **Manual commit (at least once)** - используется в Spring Kafka: коммит отправляется только после успешной обработки всех сообщений пакета путем вызова метода `acknowledge` (в этом случае возможно дублированная обработка сообщений)
 - **Custom offset management (but exactly once)** - реализуем свое хранилище offsets и четаем данные с указанного нами offset
 
+- Kafka Consumer автоматически фиксирует offset-ы после завершения вызова метода, аннотированного `@KafkaListener`.
+- Это достигается за счёт настройки `enable.auto.commit = true`, которая по умолчанию включена в Spring Kafka.
+- Kafka фиксирует offset-ы через определённый интервал времени, который задаётся параметром `auto.commit.interval.ms` (по умолчанию: 5000 мс).  
+Если обработка сообщения в методе @KafkaListener занимает больше времени, чем интервал автокоммита:  
+- Offset может быть зафиксирован до завершения обработки сообщения.
+- Это может привести к потере сообщений в случае сбоя приложения.
+
+**Отключение автокоммита**
+```yaml
+spring:
+  kafka:
+    consumer:
+      enable-auto-commit: false
+```
+**Ручная фиксация offset-ов**
+```java
+@KafkaListener(topics = "example-topic", groupId = "example-group")
+public void listen(String message, Acknowledgment acknowledgment) {
+    try {
+        // Обработка сообщения
+        System.out.println("Received: " + message);
+        // Фиксация offset после успешной обработки
+        acknowledgment.acknowledge();
+    } catch (Exception e) {
+        // Обработка ошибок
+        System.err.println("Error processing message: " + e.getMessage());
+    }
+}
+```
+
 
 > ### Join Kafka Stream
 
@@ -377,8 +407,8 @@ while (isRunning()) {
 Метод, аннотированный @KafkaListener, вызывается автоматически, когда в топике появляются новые сообщения.
 Вот как это происходит:
 
-Дефиниции параметров Kafka Producer их значения по умолчанию и описание можно найти в классе org.apache.kafka.clients.producer.ProducerConfig
-Дефиниции параметров Kafka Consumer их значения по умолчанию и описание можно найти в классе org.apache.kafka.clients.consumer.ConsumerConfig
+Дефиниции параметров Kafka Producer их значения по умолчанию и описание можно найти в классе org.apache.kafka.clients.producer.ProducerConfig  
+Дефиниции параметров Kafka Consumer их значения по умолчанию и описание можно найти в классе org.apache.kafka.clients.consumer.ConsumerConfig  
 
 
 1. Конфигурация слушателя:
@@ -644,5 +674,13 @@ spring:
 [UML-диаграмма последовательности потребления сообщений из Kafka](https://bigdataschool.ru/blog/uml-sequence-for-kafka-consumer.html)  
 [Под капотом Apache Kafka: разбираемся с файлами хранения и механизмами обработки данных](https://bigdataschool.ru/blog/kafka-under-the-hood-files-overview.html)  
 [Стратегии потребления Spring Kafka и обработка ошибок | ЯКоВ | RU](https://www.youtube.com/watch?v=OnZ7JArSoiU)  
-[Диспетчерская на базе Spring и Kafka. Полный курс](https://www.youtube.com/watch?v=wdljVVzhZNc)  
+[Диспетчерская на базе Spring и Kafka. Полный курс](https://www.youtube.com/watch?v=wdljVVzhZNc)
+
+[Получение сообщений из Kafka – Telegraph](https://telegra.ph/Poluchenie-soobshchenij-iz-Kafka-12-04)  
+[Отправка сообщений в Kafka – Telegraph](https://telegra.ph/Otpravka-soobshchenij-v-Kafka-12-03)  
+[Запуск Apache Kafka с ZooKeeper – Telegraph](https://telegra.ph/Zapusk-Apache-Kafka-s-ZooKeeper-11-12)  
+[Apache Kafka: партиции и реплики – Telegraph](https://telegra.ph/Apache-Kafka-particii-i-repliki-11-08)  
+[Запуск Apache Kafka в кластере – Telegraph](https://telegra.ph/Zapusk-Apache-Kafka-v-klastere-11-04)  
+[Начало работы с Kafka – Telegraph](https://telegra.ph/Nachalo-raboty-s-Kafka-10-31)  
+[Про очереди сообщений – Telegraph](https://telegra.ph/Pro-ocheredi-soobshchenij-10-25)  
 

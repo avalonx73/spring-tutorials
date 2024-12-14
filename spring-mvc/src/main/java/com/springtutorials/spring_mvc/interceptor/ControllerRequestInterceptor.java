@@ -44,6 +44,16 @@ public class ControllerRequestInterceptor implements HandlerInterceptor {
 
     }
 
+    /**
+     * Вызывается после завершения всего процесса обработки запроса, включая отображение представления (если оно есть)
+     */
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                @Nullable Exception ex) throws Exception {
+    }
+
     private void requestLogging(HttpServletRequest request) throws IOException {
         log.info("URI запроса: {}", request.getRequestURI());
         log.info("URL запроса: {}", request.getRequestURL());
@@ -83,16 +93,6 @@ public class ControllerRequestInterceptor implements HandlerInterceptor {
     private String getRequestBodyViaReader(HttpServletRequest request) throws IOException {
         String body = request.getReader().lines().collect(Collectors.joining(CRLF));
         return (body.isEmpty()) ? EMPTY : CRLF + body + CRLF;
-    }
-
-    /**
-     * Вызывается после завершения всего процесса обработки запроса, включая отображение представления (если оно есть)
-     */
-    @Override
-    public void afterCompletion(HttpServletRequest request,
-                                HttpServletResponse response,
-                                Object handler,
-                                @Nullable Exception ex) throws Exception {
     }
 
     private String getHeaderString(HttpServletRequest request) {

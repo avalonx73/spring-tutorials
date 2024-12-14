@@ -1,3 +1,4 @@
+# Если использовать образы apache/kafka, bitnami/kafka или confluentinc/cp-kafka, то ZooKeeper не нужен, так как используется KRaft.
 services:
   kafka:
     image: bitnami/kafka:latest
