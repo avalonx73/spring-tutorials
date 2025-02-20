@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Component("customKafkaProperties")
 public class CustomKafkaProperties {
     public static final Integer DEFAULT_TOPIC_REPLICA_COUNT = 1;
-    public static final Integer DEFAULT_TOPIC_PARTITION_COUNT = 4;
-    public static final Integer DEFAULT_CONCURRENCY = 2;
+    public static final Integer DEFAULT_TOPIC_PARTITION_COUNT = 1;
+    public static final Integer DEFAULT_CONCURRENCY = 1;
     public static final Long DEFAULT_BACKOFF_INTERVAL_MSEC = 1000L;
     public static final Long DEFAULT_MAX_RETRY_ATTEMPTS = Long.MAX_VALUE;
     public static final String DEFAULT_TOPIC = "registry-processing";

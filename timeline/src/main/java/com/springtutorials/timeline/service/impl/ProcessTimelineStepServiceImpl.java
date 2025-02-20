@@ -136,7 +136,7 @@ public class ProcessTimelineStepServiceImpl implements ProcessTimelineStepServic
     private void throwIfPreviousStepIsNotAllowedStatus(ProcessTimelineStepMetadataDto stepMetadataDto,
                                                        ProcessTimeline processTimeline,
                                                        ProcessTimelineStep stepToStart) {
-        if (!stepMetadataDto.isForceStart()) {
+        if (!stepMetadataDto.isForceStart() && stepMetadataDto.getPreviousStep() != null) {
             ProcessTimelineStep previousStep =
                     processTimeline.getPaymentProcessStepByDefinition(stepMetadataDto.getPreviousStep());
             if (!steps.get(stepToStart.getStepDefinition())

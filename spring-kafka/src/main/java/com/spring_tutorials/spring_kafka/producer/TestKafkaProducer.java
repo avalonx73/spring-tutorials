@@ -13,6 +13,7 @@ public class TestKafkaProducer {
     private final CustomKafkaProperties customKafkaProperties;
     public void sendMessage(MessagePayload messagePayload) {
         String topic = customKafkaProperties.getTopic();
-        kafkaTemplate.send(topic, messagePayload.getFileId(), messagePayload);
+        //kafkaTemplate.send(topic, messagePayload.getFileId(), messagePayload);
+        kafkaTemplate.send(topic, messagePayload);
     }
 }

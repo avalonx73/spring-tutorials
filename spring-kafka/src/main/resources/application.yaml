@@ -29,7 +29,7 @@ spring:
         spring.json.trusted.packages: org.springframework.batch.integration.partition
         session.timeout.ms: 60000
         heartbeat.interval.ms: 20000
-        max.poll.interval.ms: 2400000
+        max.poll.interval.ms: 20000
     admin:
       fail-fast: true
     listener:

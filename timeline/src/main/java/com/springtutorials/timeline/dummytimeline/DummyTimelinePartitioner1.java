@@ -75,6 +75,8 @@ public class DummyTimelinePartitioner1 implements Partitioner {
             }
         }
 
+        executionContextMap.forEach((key, value) -> log.info("Partition " + key + ": {}", value.get(DUMMY_TIMELINE_IDS_PARAM)));
+
         return executionContextMap;
     }
 

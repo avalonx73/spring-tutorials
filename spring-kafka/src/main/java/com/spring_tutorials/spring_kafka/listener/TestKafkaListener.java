@@ -1,5 +1,6 @@
 package com.spring_tutorials.spring_kafka.listener;
 
+import com.spring_tutorials.spring_kafka.dto.kafka.MessagePayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,8 +17,18 @@ public class TestKafkaListener {
             topics = "#{@customKafkaProperties.topic}",
             concurrency = "#{@customKafkaProperties.concurrency}",
             containerFactory = "kafkaListenerContainerFactory")
-    public void listen(ConsumerRecord<?, ?> record, Acknowledgment acknowledgment) {
-        log.info("topic: {}, partition: {}, offset: {}", record.topic(), record.partition(), record.offset());
+    public void listen(ConsumerRecord<?, ?> record, Acknowledgment acknowledgment) throws InterruptedException {
+
+        MessagePayload messagePayload = (MessagePayload) record.value();
+        log.info("messagePayload: {}, instanceId: {}, topic: {}, partition: {}, offset: {}",
+                messagePayload.getFileId(),
+                System.getenv("INSTANCE_ID"),
+                record.topic(),
+                record.partition(),
+                record.offset());
+
+        Thread.sleep(messagePayload.getSleep());
+        log.info("acknowledge {}", messagePayload.getFileId());
         acknowledgment.acknowledge();
     }
 }

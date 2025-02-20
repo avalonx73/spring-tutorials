@@ -279,7 +279,12 @@ UML-диаграмма публикации сообщений
 **Сетевые соединения:** Kafka консюмер поддерживает постоянное соединение с брокером, а не создаёт новое соединение для каждого запроса.  
 **Протокол:** Kafka использует свой собственный протокол, который оптимизирован для высокоскоростного обмена данными и поддерживает асинхронное взаимодействие.
 
-Количество активных `Consumer` в одной группе, которые читают топик, не может быть больше количества партиций в топике.  
+- Количество активных `Consumer` в одной группе, которые читают топик, не может быть больше количества партиций в топике.  
+- В рамках одной группы консюмеров на каждую партицию закрепляется только один консюмер.  
+- Однако, если консюмеры принадлежат к разным группам, то они могут читать из одной и той же партиции.  
+- Каждая группа консюмеров ведет свой собственный офсет (указатель на следующее непрочитанное сообщение) для каждой партиции.  
+Таким образом, разные группы могут читать одни и те же сообщения, но с разных позиций.  
+
 Консюмеры из одной группы не могут параллельно читать сообщения из одной и той же партиции.  
 В противном случае (например, партиция одна, а консюмеров в группе 2):
 1. Kafka автоматически назначит единственную партицию одному из двух консюмеров в группе.
@@ -346,7 +351,75 @@ public void listen(String message, Acknowledgment acknowledgment) {
     }
 }
 ```
+## Повторное чтение ранее прочитанных сообщений
+1. **Сброс смещения с помощью Kafka API**
+   Kafka позволяет вручную изменять смещения для группы консюмеров через команду консольного утилита Kafka:
 
+```bash 
+kafka-consumer-groups.sh --bootstrap-server <broker> \
+--group <consumer-group> --topic <topic-name> --reset-offsets \
+--to-earliest --execute
+--to-earliest: Сбрасывает смещение к самому старому доступному сообщению.
+```
+Если вы хотите начать с конкретного смещения, можно использовать --to-offset <offset>.  
+После выполнения этой команды консюмер будет читать сообщения с измененного смещения.  
+2. **Использование Kafka API в приложении**
+   Вы можете программно сбросить смещения, используя Kafka Admin API или вручную изменив начальную позицию потребителя.  
+
+Пример для Spring Kafka:
+```java
+@Autowired
+private KafkaAdmin kafkaAdmin;
+
+public void resetOffsets(String consumerGroup, String topic) {
+AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties());
+Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
+
+    // Получение списка партиций топика
+    List<TopicPartition> partitions = adminClient
+        .describeTopics(Collections.singleton(topic))
+        .all()
+        .get()
+        .get(topic)
+        .partitions()
+        .stream()
+        .map(info -> new TopicPartition(topic, info.partition()))
+        .toList();
+
+    // Сброс к началу (или укажите другое смещение)
+    partitions.forEach(tp -> offsets.put(tp, new OffsetAndMetadata(0)));
+    adminClient.alterConsumerGroupOffsets(consumerGroup, offsets).all().get();
+    adminClient.close();
+}
+```
+Этот код сбрасывает смещения группы для всех партиций указанного топика на offset = 0.
+3. **Изменение группы консюмеров**
+   Если создать новую группу консюмеров (изменить параметр group.id), то Kafka будет считать, что эта группа никогда не читала топик. В таком случае будет применено значение параметра auto.offset.reset:
+
+Если earliest, то консюмер начнет с самого начала.  
+Если latest, то консюмер будет читать только новые сообщения.  
+Пример настройки:  
+```yaml
+spring:
+  kafka:
+    consumer:
+      group-id: new-consumer-group
+      auto-offset-reset: earliest
+```
+4. **Ручная обработка смещений в коде**
+   Вы можете управлять смещениями вручную, используя KafkaConsumer напрямую вместо Spring Kafka. Например:
+```java
+    consumer.seekToBeginning(consumer.assignment()); // Начать с самого начала
+```
+Или начать с конкретного смещения:
+```java
+    consumer.seek(new TopicPartition("my-topic", 0), 10L); // Начать с 10-го сообщения
+```
+**Замечания**
+- Ретеншн топика: Если сообщения удалены из-за политики хранения (retention), их повторное чтение станет невозможным.
+- Загрузка данных: При сбросе смещений и большом объеме данных чтение может занять значительное время.
+- Уникальность группы: Если вы используете другую группу, это не будет повторным чтением "этим же" консюмером.
+Сброс смещений — это наиболее надежный способ повторного чтения сообщений для той же группы.
 
 > ### Join Kafka Stream
 
@@ -418,9 +491,54 @@ while (isRunning()) {
 ```java
 import org.springframework.kafka.annotation.KafkaListener;
 
-@KafkaListener(topics = "topic1", groupId = "group_id")
+@KafkaListener(topics = "topic1", groupId = "group_id", concurrency = 2)
 public void listen(String message) {
     System.out.println("Received message: " + message);
+}
+```
+- Когда вы указываете `concurrency = N` в аннотации `@KafkaListener`, вы создаете N экземпляров потребителя (консюмера) для данного топика.  
+- Он определяет уровень параллелизма только для конкретного метода-слушателя.
+- Если значение установленное в factory.setConcurrency больше, то значение concurrency будет переопределено.  
+- Если значение concurrency в аннотации `@KafkaListener` больше, чем значение, установленное в фабрике контейнеров слушателей, то будет использовано значение из аннотации.
+
+**factory.setConcurrency(3):**
+- Глобальная настройка: Этот метод применяется к фабрике контейнеров слушателей и устанавливает максимальное количество параллельных потоков для всех слушателей, создаваемых этой фабрикой.
+- Верхний предел: Если в аннотации какого-либо слушателя указано меньшее значение concurrency, то оно будет переопределено значением из фабрики.
+
+Когда использовать что:
+- Использовать только factory.setConcurrency(3):
+  -- Если вы хотите установить одинаковый уровень параллелизма для всех слушателей в вашем приложении.
+  -- Если у вас нет необходимости в различной степени параллелизма для разных слушателей.
+- Использовать оба параметра (setConcurrency и concurrency):
+  -- Если вы хотите настроить различный уровень параллелизма для разных слушателей.
+  -- Например, для одного слушателя вы можете установить concurrency=1, а для другого - concurrency=5.
+
+```java
+@Configuration
+public class KafkaConsumerConfig {
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setConcurrency(3); // Максимальное количество потоков для всех слушателей
+        return factory;
+    }
+
+    @KafkaListener(topics = "my-topic", concurrency = 4)
+    public void listen1(ConsumerRecord<?, ?> record) {
+        // Обработка сообщений с параллелизмом 4
+    }
+
+    @KafkaListener(topics = "another-topic")
+    public void listen2(ConsumerRecord<?, ?> record) {
+        // Обработка сообщений с параллелизмом по умолчанию (3)
+    }
+
+   @KafkaListener(topics = "my-topic", concurrency = 2)
+   public void listen3(ConsumerRecord<?, ?> record) {
+      // Обработка сообщений с параллелизмом 3 (переопределено из factory.setConcurrency)
+   }
 }
 ```
 
@@ -531,9 +649,27 @@ public class KafkaConsumerConfig {
     }
 }
 ```
+**session.timeout.ms**
+Это критически важный параметр конфигурации потребителя Kafka, который определяет максимальное время (в миллисекундах), в течение которого брокер Kafka будет считать потребителя активным.  
+Если в течение этого времени брокер не получит от потребителя никаких сигналов (heartbeat), он посчитает потребителя неактивным и исключит его из группы потребителей.  
+Это приведет к перебалансировке партиций и может повлиять на доступность и производительность приложения.  
 
-max.poll.interval.ms - Map<String, Object> props = new HashMap<>();  
+**heartbeat.interval.ms**
+Интервал, с которым потребитель отправляет heartbeat брокеру. Значение `heartbeat.interval.ms` должно быть значительно меньше `session.timeout.ms`
 
+**max.poll.interval.ms**
+
+```yaml
+spring:
+  kafka:
+    consumer:
+      properties:
+        session.timeout.ms: 60000
+        heartbeat.interval.ms: 20000
+        max.poll.interval.ms: 2400000
+```
+
+Map<String, Object> props = new HashMap<>();  
 props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 900000); // 15 минут
 
 - Описание: Это максимальное время в миллисекундах, которое консюмер может проводить между вызовами метода poll без риска быть признанным неактивным и исключенным из группы консюмеров.
@@ -544,11 +680,12 @@ props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 900000); // 15 минут
 то консюмер будет считаться неактивным. В этом случае произойдут следующие шаги:
 - Консюмер считается неактивным: После истечения времени max.poll.interval.ms, Kafka решит, что консюмер неактивен, потому что он не вызвал poll в течение установленного интервала.
 - Проброс исключения: Консюмер получит исключение
-org.apache.kafka.clients.consumer.internals.ConsumerCoordinator$OffsetCommitTimeoutException или
-org.apache.kafka.clients.consumer.internals.ConsumerCoordinator$CommitFailedException,
+`org.apache.kafka.clients.consumer.internals.ConsumerCoordinator$OffsetCommitTimeoutException` или
+`org.apache.kafka.clients.consumer.internals.ConsumerCoordinator$CommitFailedException`,
 которое указывает на то, что консюмер не смог успешно выполнить коммит смещения.
 - Закрытие консюмера: Если консюмер не может поддерживать соединение с брокером из-за превышения max.poll.interval.ms, он будет закрыт.
 После закрытия консюмера никакие новые сообщения не будут прочитаны до тех пор, пока приложение не перезапустит консюмер.
+- Сообщение остается незакоммиченным и попадет в consumer снова
 - Зависимость от настроек auto.offset.reset: Если auto.offset.reset настроен на earliest или latest,
 то при следующем запуске консюмера он либо начнет читать с самого начала топика (в случае earliest), либо с конца (в случае latest), в зависимости от того, как настроено ваше приложение.
 
@@ -660,27 +797,40 @@ spring:
           retries: 3
 ```
 ---
+> ## Альтернативы Kafka 
+- [ZeroMQ — библиотека, реализующая очереди сообщений без брокеров](https://zeromq.org/)  
+- [Apache ActiveMQ Classic — Проверенный и надежный брокер сообщений с открытым исходным кодом](https://activemq.apache.org/components/classic/)  
+- [Apache ActiveMQ Artemis — Брокер сообщений следующего поколения от ActiveMQ](https://activemq.apache.org/components/artemis/)  
+- [IBM MQ](https://www.ibm.com/products/mq)  
+- [Red Hat AMQ](https://www.redhat.com/en/technologies/jboss-middleware/amq)
+- [NATS — брокер очередей сообщений и стриминговый сервис](https://nats.io/)
+- [RabbitMQ — брокер очередей сообщений и стриминговый сервис](https://www.rabbitmq.com/)
+- [Apache Qpid™ — брокер очередей сообщений](https://qpid.apache.org/)
+- [Apache Pulsar™ — стриминговый сервис](https://pulsar.apache.org/)
+- [Apache Camel — EIP-фреймворк](https://camel.apache.org/)
 
-![альтернативы Kafka.png](src/main/resources/image/альтернативы%20Kafka.png)
 
-[Apache Kafka Documentation](https://kafka.apache.org/documentation/)  
-[Spring for Apache Kafka](https://docs.spring.io/spring-kafka/reference/index.html)  
-[Spring for Apache Kafka 3.2.3 API](https://docs.spring.io/spring-kafka/api/index.html)  
-[Про Kafka (основы) - Владимир Богдановский](https://www.youtube.com/watch?v=-AZOi3kP9Js)  
-[Spring + Kafka навсегда - плейлист](https://www.youtube.com/playlist?list=PL3YLcFohmEErXLr_Bg1lV0RWUrbmN6dbH)  
-[Курс | Apache Kafka от OTUS](https://www.youtube.com/playlist?list=PLfnFOImnyWRX_EvkfNXFB977BCVOS1MXB)  
-[Много статей по Kafka на сайте BigDataSchool.ru](https://bigdataschool.ru/blog/news/kafka)  
-[Под капотом продюсера Kafka: UML-диаграмма публикации сообщений](https://bigdataschool.ru/blog/kafka-producer-uml-sequence.html)  
-[UML-диаграмма последовательности потребления сообщений из Kafka](https://bigdataschool.ru/blog/uml-sequence-for-kafka-consumer.html)  
-[Под капотом Apache Kafka: разбираемся с файлами хранения и механизмами обработки данных](https://bigdataschool.ru/blog/kafka-under-the-hood-files-overview.html)  
-[Стратегии потребления Spring Kafka и обработка ошибок | ЯКоВ | RU](https://www.youtube.com/watch?v=OnZ7JArSoiU)  
-[Диспетчерская на базе Spring и Kafka. Полный курс](https://www.youtube.com/watch?v=wdljVVzhZNc)
-
-[Получение сообщений из Kafka – Telegraph](https://telegra.ph/Poluchenie-soobshchenij-iz-Kafka-12-04)  
-[Отправка сообщений в Kafka – Telegraph](https://telegra.ph/Otpravka-soobshchenij-v-Kafka-12-03)  
-[Запуск Apache Kafka с ZooKeeper – Telegraph](https://telegra.ph/Zapusk-Apache-Kafka-s-ZooKeeper-11-12)  
-[Apache Kafka: партиции и реплики – Telegraph](https://telegra.ph/Apache-Kafka-particii-i-repliki-11-08)  
-[Запуск Apache Kafka в кластере – Telegraph](https://telegra.ph/Zapusk-Apache-Kafka-v-klastere-11-04)  
-[Начало работы с Kafka – Telegraph](https://telegra.ph/Nachalo-raboty-s-Kafka-10-31)  
-[Про очереди сообщений – Telegraph](https://telegra.ph/Pro-ocheredi-soobshchenij-10-25)  
+> ## Полезные ссылки 
+- [KafkaIDE](https://kafkaide.com/)
+- [Kafka Visualization](https://softwaremill.com/kafka-visualisation/)
+- [Открытый вебинар Kafka Fundamentals](https://www.youtube.com/watch?v=vWhoTSBojbo)
+- [Kafka - полный курс](https://www.youtube.com/playlist?list=PLt91xr-Pp57Q50WsXz9r-zmxy5ceu_hp_)
+- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)  
+- [Spring for Apache Kafka](https://docs.spring.io/spring-kafka/reference/index.html)  
+- [Spring for Apache Kafka 3.2.3 API](https://docs.spring.io/spring-kafka/api/index.html)  
+- [Про Kafka (основы) - Владимир Богдановский](https://www.youtube.com/watch?v=-AZOi3kP9Js)  
+- [Spring + Kafka навсегда - плейлист](https://www.youtube.com/playlist?list=PL3YLcFohmEErXLr_Bg1lV0RWUrbmN6dbH)  
+- [Курс | Apache Kafka от OTUS](https://www.youtube.com/playlist?list=PLfnFOImnyWRX_EvkfNXFB977BCVOS1MXB)  
+- [Много статей по Kafka на сайте BigDataSchool.ru](https://bigdataschool.ru/blog/news/kafka)  
+- [Под капотом продюсера Kafka: UML-диаграмма публикации сообщений](https://bigdataschool.ru/blog/kafka-producer-uml-sequence.html)  
+- [UML-диаграмма последовательности потребления сообщений из Kafka](https://bigdataschool.ru/blog/uml-sequence-for-kafka-consumer.html)  
+- [Под капотом Apache Kafka: разбираемся с файлами хранения и механизмами обработки данных](https://bigdataschool.ru/blog/kafka-under-the-hood-files-overview.html)  
+- [Стратегии потребления Spring Kafka и обработка ошибок | ЯКоВ | RU](https://www.youtube.com/watch?v=OnZ7JArSoiU)  
+- [Диспетчерская на базе Spring и Kafka. Полный курс](https://www.youtube.com/watch?v=wdljVVzhZNc)
+- [Уголок сельского джависта про Kafka](https://alexkosarev.name/tag/kafka/)  
+- [Apache Kafka: внутреннее устройство, гарантии доставки, особенности, кейсы использования](https://www.youtube.com/watch?v=vJypEOvWmDo)
+- [Apache Kafka. Специфика работы и практика](https://www.youtube.com/watch?v=tQYQZAg6k0w&t=194s)  
+- [Григорий Кошелев — Kafka: от теории к практике](https://www.youtube.com/watch?v=ghKnX5fuW5s)
+- [Открытый вебинар Kafka Fundamentals](https://www.youtube.com/watch?v=vWhoTSBojbo)
+- [Kafka кэш на Java. KCache](https://www.youtube.com/watch?v=swgjX0f9hnY)
 
