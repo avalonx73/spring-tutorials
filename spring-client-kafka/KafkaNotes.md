@@ -833,4 +833,8 @@ spring:
 - [Григорий Кошелев — Kafka: от теории к практике](https://www.youtube.com/watch?v=ghKnX5fuW5s)
 - [Открытый вебинар Kafka Fundamentals](https://www.youtube.com/watch?v=vWhoTSBojbo)
 - [Kafka кэш на Java. KCache](https://www.youtube.com/watch?v=swgjX0f9hnY)
-
+- [15 Essential Do’s and Don’ts with Apache Kafka by Stephane Derosiaux](https://www.youtube.com/watch?v=2FNhKB3DK5Y)
+- [A Kafka Producer’s Request: Or, There and Back Again by Danica Fine](https://www.youtube.com/watch?v=eHWFHFQ8tKo)
+- [Exploring Kafka Producer’s Internals](https://blog.developer.adobe.com/exploring-kafka-producers-internals-37411b647d0f)
+- [Exploring Kafka Consumer’s Internals](https://blog.developer.adobe.com/exploring-kafka-consumers-internals-b0b9becaa106)
+- [Как объяснить детям, что такое Apache Kafka за 15 минут с картинками и выдрами](https://habr.com/ru/articles/563582/)

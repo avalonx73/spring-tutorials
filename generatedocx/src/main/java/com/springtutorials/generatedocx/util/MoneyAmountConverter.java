@@ -1,6 +1,12 @@
 package com.springtutorials.generatedocx.util;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class MoneyAmountConverter {
 
@@ -18,19 +24,30 @@ public class MoneyAmountConverter {
             return "";
         }
 
-        String result;
-        long currencyUnit = amount.longValue();
-        long currencySubunit = amount.remainder(BigDecimal.ONE)
+        String result = "";
+
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            result = "мінус ";
+        }
+
+        amount = amount.abs().setScale(2, RoundingMode.HALF_UP);
+
+        if (amount.compareTo(new BigDecimal("999999999999.99")) > 0) {
+            return "Занадто велике число";
+        }
+
+        long currencyUnitValue = amount.longValue();
+        long currencySubunitValue = amount.remainder(BigDecimal.ONE)
                 .multiply(BigDecimal.valueOf(100))
                 .longValue();
 
-        if (currencyUnit == 0) {
+        if (currencyUnitValue == 0) {
             result = "нуль гривень ";
         } else {
-            result = convertNumberToWords(currencyUnit);
+            result += convertNumberToWords(currencyUnitValue);
         }
 
-        result += convertCurrencySubunitToWords(currencySubunit);
+        result += convertCurrencySubunitToWords(currencySubunitValue);
 
         return result.trim();
     }
@@ -48,32 +65,31 @@ public class MoneyAmountConverter {
         long remainder = number % 1_000;
 
         if (billions > 0) {
-            result.append(convertGroup(billions, maleUnits, tens, teens, hundreds))
+            result.append(convertGroup(billions, maleUnits))
                     .append(getWordForBillions(billions))
                     .append(" ");
         }
 
         if (millions > 0) {
-            result.append(convertGroup(millions, maleUnits, tens, teens, hundreds))
+            result.append(convertGroup(millions, maleUnits))
                     .append(getWordForMillions(millions))
                     .append(" ");
         }
 
         if (thousands > 0) {
-            result.append(convertGroup(thousands, femaleUnits, tens, teens, hundreds))
+            result.append(convertGroup(thousands, femaleUnits))
                     .append(getWordForThousands(thousands))
                     .append(" ");
         }
 
-            result.append(convertGroup(remainder, femaleUnits, tens, teens, hundreds))
+            result.append(convertGroup(remainder, femaleUnits))
                     .append(getWordForCurrencyUnit(remainder))
                     .append(" ");
 
         return result.toString();
     }
 
-    private static String convertGroup(long number, String[] units, String[] tens,
-                                       String[] teens, String[] hundreds) {
+    private static String convertGroup(long number, String[] units) {
         StringBuilder result = new StringBuilder();
 
         long hundred = number / 100;
@@ -119,19 +135,18 @@ public class MoneyAmountConverter {
             return "нуль копійок";
         }
 
-       // String kopeksStr = String.format("%02d", currencySubunit);
-        String kopeksStr = result.toString();
+        String currencySubunitStr = result.toString();
 
         if (currencySubunit >= 11 && currencySubunit <= 19) {
-            return kopeksStr + "копійок";
+            return currencySubunitStr + "копійок";
         }
 
         switch ((int)(currencySubunit % 10)) {
-            case 1: return kopeksStr + "копійка";
+            case 1: return currencySubunitStr + "копійка";
             case 2:
             case 3:
-            case 4: return kopeksStr + "копійки";
-            default: return kopeksStr + "копійок";
+            case 4: return currencySubunitStr + "копійки";
+            default: return currencySubunitStr + "копійок";
         }
     }
 
@@ -178,9 +193,7 @@ public class MoneyAmountConverter {
     }
 
     private static String getWordForBillions(long number) {
-        if (number % 100 >= 11 && number % 100 <= 19) return "мільярдів";
-
-        if (number >= 11 && number <= 19) {
+        if ((number % 100 >= 11 && number % 100 <= 19) || (number >= 11 && number <= 19)) {
             return "мільярдів";
         }
 
@@ -191,5 +204,16 @@ public class MoneyAmountConverter {
             case 4: return "мільярда";
             default: return "мільярдів";
         }
+    }
+
+    public static String formatCurrency(BigDecimal value) {
+        DecimalFormat formatter = new DecimalFormat("### ###.##");
+        formatter.setDecimalFormatSymbols(new DecimalFormatSymbols(new Locale("uk", "UA")));
+        return formatter.format(value);
+    }
+
+    public static String formatDate(LocalDate value) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy 'р'", new Locale("uk", "UA"));
+        return value.format(formatter);
     }
 }

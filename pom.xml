@@ -28,6 +28,7 @@
 		<module>spring-client-kafka</module>
 		<module>spring-async</module>
 		<module>spring-kafka</module>
+		<module>generatedocx</module>
 	</modules>
 
 	<packaging>pom</packaging>

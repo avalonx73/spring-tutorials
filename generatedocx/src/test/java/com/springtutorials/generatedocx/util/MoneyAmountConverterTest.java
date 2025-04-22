@@ -12,10 +12,10 @@ class MoneyAmountConverterTest {
 
     @Test
     void convertToWords() {
-        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_000_000_000.01)));
-       log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_000_000.97)));
-        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_000.63)));
-        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(100.17)));
+        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1.09)));
+        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_001.97)));
+        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_019_017.63)));
+        log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(1_011_012_013.17)));
         log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(22222.854)));
         log.info(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(13001.41)));
     }

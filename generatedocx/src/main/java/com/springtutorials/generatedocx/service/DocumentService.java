@@ -2,6 +2,7 @@ package com.springtutorials.generatedocx.service;
 
 import com.springtutorials.generatedocx.dto.ServiceDeliveryReportData;
 import com.springtutorials.generatedocx.dto.ServiceDeliveryReportItemData;
+import com.springtutorials.generatedocx.util.MoneyAmountConverter;
 import jakarta.xml.bind.JAXBElement;
 import lombok.RequiredArgsConstructor;
 import org.docx4j.XmlUtils;
@@ -152,9 +153,9 @@ public class DocumentService {
 
 
         data.setTotalAmount("246 246,42");
-        data.setTotalAmountInWords("");
+        data.setTotalAmountInWords(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(246246.42)));
         data.setTotalCommissionAmount("12,51");
-        data.setTotalCommissionAmountInWords("дванадцять гривень п’ятдесят одна копійка");
+        data.setTotalCommissionAmountInWords(MoneyAmountConverter.convertToUkrWords(BigDecimal.valueOf(12.51)));
 
         data.setCommissionAccount("UA603563340000003739490000303");
         data.setCommissionAccountMfo("356334");
